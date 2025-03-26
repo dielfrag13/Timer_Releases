@@ -5,21 +5,24 @@ $global:zipName = "application_server_v0-1-0-alpha.zip"
 
 # check if script is running as Administrator
 function Check-Admin {
-    $currentUser = [Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()
-    $isAdmin = $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
-    $response = Read-Host "Detected non-administrative priviliges. If installed without administrative privileges, 
-    the server will host on port 8080 by default (although this can be modified later in the installation process).
-    Continue with installation as a non-administrative user (Y) or exit(n)?"
-    if ($response -eq 'Y' -or $response -eq 'y') {
-        Write-Output "updating default path to AppData/Local..."
-        $global:defaultPath = (Join-Path $env:LOCALAPPDATA "") + "ASC Timer Server"
-        Write-Output "updating default port to 8080..."
-        $global:defaultPort = "8080"
-    }
-    else {
-        Write-Output "exiting now. Please rerun as an administrative user."
-        exit
+    $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
+
+    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        $response = Read-Host "Detected non-administrative priviliges. If installed without administrative privileges, the server will host on port 8080 by default (although this can be modified later in the installation process). Continue with installation as a non-administrative user (Y) or exit(n)?"
+        if ($response -eq 'Y' -or $response -eq 'y') {
+            Write-Output "updating default path to AppData/Local..."
+            $global:defaultPath = (Join-Path $env:LOCALAPPDATA "") + "ASC Timer Server"
+            Write-Output "updating default port to 8080..."
+            $global:defaultPort = "8080"
+        }
+        else {
+            Write-Output "exiting now. Please rerun as an administrative user."
+            exit
+        }
+    } else {
+        Write-Output "Administrative privileges detected. Continuing..."
     }
 }
 
